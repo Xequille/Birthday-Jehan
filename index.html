@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>hbd mek</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:italic&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --soft-pink: #ffc7d2;
+            --deep-pink: #fae1e6; 
+            --white: #ffffff;
+            --accent-pink: #f4c2c2;
+            --text-main: #444444;
+            --text-muted: #888888;
+        }
+
+        /* Reset & Base */
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none;
+        }
+
+        html, body {
+            height: 100%; width: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--soft-pink) 0%, var(--white) 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Background Elements */
+        #bg-elements {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+
+        .float-item {
+            position: absolute; opacity: 0.15;
+            animation: floatUp 8s infinite linear;
+        }
+
+        /* Layout */
+        .page-container {
+            display: flex; flex-direction: column;
+            height: 100%; width: 100%;
+            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .page {
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
+            flex-shrink: 0; position: relative; z-index: 1;
+        }
+
+        #page2 {
+            justify-content: flex-start;
+            padding-top: 8vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        #page2::-webkit-scrollbar { display: none; }
+
+        /* Typography */
+        .from-header {
+            font-size: 0.65rem; letter-spacing: 4px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: 10px;
+            animation: fadeInDown 1.5s ease;
+        }
+
+        .hbd-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem; font-style: italic;
+            background: linear-gradient(to right, #444, var(--accent-pink), #444);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite, fadeInUp 1.5s ease;
+            line-height: 1.2;
+        }
+
+        .name-footer {
+            font-size: 0.8rem; letter-spacing: 6px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-top: 15px; font-weight: 300;
+            margin-bottom: 40px;
+            animation: fadeInUp 2s ease;
+        }
+
+        /* Photo Grid & Polaroid */
+        .photo-grid {
+            display: flex; gap: 10px;
+            margin-bottom: 25px; justify-content: center;
+            width: 100%;
+        }
+
+        .polaroid {
+            background: white; padding: 6px 6px 16px 6px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+            width: 90px; opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .img-wrapper {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Paksa jadi kotak sempurna */
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+            background: #fdfdfd;
+        }
+
+        .img-photo {
+            width: 100%; height: 100%;
+            object-fit: cover; /* Crop otomatis tengah */
+        }
+
+        /* Animations for Polaroid */
+        #page2.active .polaroid:nth-child(1) { animation: fadeInUp 1s ease 0.2s forwards; transform: rotate(-5deg); }
+        #page2.active .polaroid:nth-child(2) { animation: fadeInUp 1s ease 0.4s forwards; transform: rotate(3deg); margin-top: -10px; }
+        #page2.active .polaroid:nth-child(3) { animation: fadeInUp 1s ease 0.6s forwards; transform: rotate(-2deg); }
+
+        .wish-text-mid {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem; font-style: italic;
+            color: #777; margin-bottom: 25px;
+            opacity: 0; transform: translateY(10px);
+            transition: all 1s ease 1s;
+        }
+        #page2.active .wish-text-mid { opacity: 1; transform: translateY(0); }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #ffffff 0%, var(--deep-pink) 100%);
+            border: none; padding: 15px 35px;
+            font-size: 0.7rem; letter-spacing: 2px;
+            text-transform: uppercase; border-radius: 50px;
+            color: #666; font-weight: 600;
+            box-shadow: 0 10px 20px rgba(244, 194, 194, 0.4);
+            cursor: pointer; transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        /* Final Message Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 25px; padding: 25px;
+            width: 100%; max-width: 320px;
+            margin: 10px auto 20px auto; opacity: 0;
+            transform: translateY(20px); transition: all 0.8s ease;
+            display: none;
+        }
+        .message-text { font-size: 0.9rem; line-height: 1.6; font-weight: 300; color: #555; }
+
+        /* Footer Decor */
+        .footer-decor {
+            opacity: 0; transform: translateY(10px);
+            transition: all 1s ease 0.5s;
+            margin-top: 20px; padding-bottom: 60px;
+            display: none;
+        }
+        .footer-decor.show { opacity: 1; transform: translateY(0); display: block; }
+        .emoji-row { font-size: 1.2rem; margin-bottom: 15px; letter-spacing: 15px; }
+        .sig-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.8rem; color: #999; }
+        .date-text { font-size: 0.6rem; letter-spacing: 3px; color: #bbb; margin-top: 8px; text-transform: uppercase; }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(8px);
+            z-index: 1000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .wish-modal {
+            background: white; border-radius: 25px;
+            padding: 30px 25px; width: 85%; max-width: 320px;
+            text-align: center; box-shadow: 0 15px 40px rgba(255, 199, 210, 0.4);
+            transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.open .wish-modal { transform: scale(1); }
+        .modal-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 8px; color: #444; }
+        .modal-subtitle { font-size: 0.75rem; color: #999; margin-bottom: 20px; }
+        .wish-input {
+            width: 100%; padding: 12px 15px; border-radius: 12px;
+            border: 1px solid #ffd1dc; background: #fffcfd;
+            font-size: 0.85rem; margin-bottom: 20px; outline: none;
+            user-select: auto;
+        }
+        .modal-btn { background: var(--soft-pink); color: white; padding: 12px 25px; width: 100%; }
+
+        /* Keyframes */
+        @keyframes shine { to { background-position: 200% center; } }
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.2; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="bg-elements"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="wish-modal">
+            <h2 class="modal-title">Make a Wish! 🌸</h2>
+            <p class="modal-subtitle">Ketik keinginan terbesarmu di tahun ini sebelum lanjut ya Jehan...</p>
+            <input type="text" class="wish-input" id="wishInput" placeholder="Tulis di sini...">
+            <button class="btn modal-btn" onclick="submitWish()">Lihat Kejutan ✨</button>
+        </div>
+    </div>
+
+    <div class="page-container" id="pageContainer">
+        <div class="page" id="page1">
+            <div class="from-header">From : Linci</div>
+            <h1 class="hbd-title">Happy Birthday.</h1>
+            <div class="name-footer">Jehan</div>
+            <button class="btn" onclick="openWishModal()">Open Surprise</button>
+        </div>
+
+        <div class="page" id="page2">
+            <div class="photo-grid">
+                <div class="polaroid"><div class="img-wrapper"><img src="https://i.ibb.co.com/gZH5NQg1/image.png" class="img-photo"></div></div>
+                <div class="polaroid"><div class="img-wrapper"><img src="https://i.ibb.co.com/twf4NNY3/image.png" class="img-photo"></div></div>
+                <div class="polaroid"><div class="img-wrapper"><img src="https://i.ibb.co.com/5htP7Djp/image.png" class="img-photo"></div></div>
+            </div>
+
+            <p class="wish-text-mid">" Wish u all the best "</p>
+            <button class="btn" id="finalBtn" onclick="revealFinal()">Make a wish</button>
+
+            <div class="glass-card" id="wishCard">
+                <p class="message-text">
+Happy birthday 🤍
+tencuu jee udah mau jadi temen yang selalu ada buat gue, dengerin cerita gue, dan nemenin di segala kondisi gue. semoga lo selalu bahagia, dilancarin semua urusannya, dan dapet hal hal baik terus ke depannyaa, semoga wish sekecil apapun bisa terwujud yaa ! don't worry about you getting older, just enjoy your life.                </p>
+            </div>
+
+            <div class="footer-decor" id="footerDecor">
+                <div class="emoji-row">☁️ 🌸 🎀</div>
+                <p class="sig-text">Always. Everywhere.</p>
+                <p class="date-text">20 . 03 . 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Floating Background Elements
+        function createFloat() {
+            const container = document.getElementById('bg-elements');
+            const item = document.createElement('div');
+            item.className = 'float-item';
+            item.innerHTML = ['🌸', '✨', '🤍'][Math.floor(Math.random() * 3)];
+            item.style.left = Math.random() * 100 + 'vw';
+            item.style.fontSize = Math.random() * 15 + 10 + 'px';
+            item.style.animationDuration = Math.random() * 5 + 7 + 's';
+            container.appendChild(item);
+            setTimeout(() => item.remove(), 8000);
+        }
+        setInterval(createFloat, 1200);
+
+        // Modal Functions
+        function openWishModal() {
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function submitWish() {
+            const input = document.getElementById('wishInput').value;
+            if (input.trim() !== "") {
+                document.getElementById('modalOverlay').classList.remove('open');
+                document.getElementById('pageContainer').style.transform = "translateY(-100vh)";
+                setTimeout(() => { document.getElementById('page2').classList.add('active'); }, 600);
+            } else {
+                alert("Isi dulu wish-nya dong Ara sayang! 🌸");
+            }
+        }
+
+        // Final Reveal
+        function revealFinal() {
+            confetti({
+                particleCount: 150, spread: 80, origin: { y: 0.7 },
+                colors: ['#f4c2c2', '#ffffff', '#ffd1dc']
+            });
+
+            const card = document.getElementById('wishCard');
+            const footer = document.getElementById('footerDecor');
+            
+            card.style.display = "block";
+            footer.style.display = "block";
+
+            setTimeout(() => {
+                card.style.opacity = "1";
+                card.style.transform = "translateY(0)";
+                footer.classList.add('show');
+                
+                // Aktifkan scroll
+                document.body.style.overflowY = "auto";
+                
+                const page2 = document.getElementById('page2');
+                setTimeout(() => {
+                    page2.scrollTo({ top: page2.scrollHeight, behavior: 'smooth' });
+                }, 300);
+            }, 50);
+        }
+
+        // Prevent unwanted scrolling before reveal
+        document.addEventListener('touchmove', function(e) {
+            if (document.body.style.overflowY !== "auto") e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
